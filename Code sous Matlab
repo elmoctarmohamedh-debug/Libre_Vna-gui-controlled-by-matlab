@@ -1,1 +1,88 @@
+% Etablissement de la connexion  
 
+host = '127.0.0.1';
+port = 19542;
+
+scpi = tcpclient(host, port, "Timeout", 30);
+disp("Connexion SCPI établie");
+
+% Envoi et test de quelques commandes SCIPI
+
+% Obtention de 'frequency start'
+pause(0.1);
+writeline(scpi, 'VNA:FREQuency:STARt?');
+resp = readline(scpi);
+disp("Start frequency = " + resp);
+
+% Obtention de 'stop frequency'
+pause(0.1);
+writeline(scpi, 'VNA:FREQuency:STOP?');
+resp = readline(scpi);
+disp("Stop frequency = " + resp);
+
+% Obtention de 'SPAN'
+pause(0.1);
+writeline(scpi, 'VNA:FREQuency:SPAN?');
+resp = readline(scpi);
+disp("Span = " + resp);
+
+
+% Obtention des NB POINTS
+pause(0.1);
+writeline(scpi, 'VNA:ACQuisition:POINTS?');
+resp = readline(scpi);
+disp("Points = " + resp);
+
+% SET NB POINTS : Possibilité de choisir le nombre de points souhaités
+% writeline(scpi, 'VNA:ACQuisition:POINTS 501');
+
+
+% Lancement et lecture de S11
+writeline(scpi, "VNA:TRACe:DATA? S11");
+raw_1 = readline(scpi);
+pause(0.5);
+
+% Parse:Nettoyage des symboles '[]'et conversion en vecteur les données de S11  
+raw_1 = erase(raw_1, ["[", "]"]);
+nums_1 = str2double(split(raw_1, ",")); 
+
+% Transformation du vecteur nums en matrice [freq, Re, Im]
+data_1 = reshape(nums_1, 3, []).';
+freqs_1 = data_1(:,1);
+S11_Re = data_1(:,2);
+S11_Im = data_1(:,3);
+S11 = S11_Re + 1i*S11_Im;
+
+S11_db= 20*log10(abs(S11)); % conversion des données S11 en desibel
+
+
+% Lancement et lecture de S21
+writeline(scpi, "VNA:TRACe:DATA? S21");
+raw= readline(scpi);
+pause(0.5);
+
+% Parse: Nettoyage des symboles '[]'et conversion en vecteur les données de S21  
+raw = erase(raw, ["[", "]"]);
+nums = str2double(split(raw, ",")); 
+
+% Transformation du vecteur nums en matrice [freq, Re, Im]
+data = reshape(nums, 3, []).';
+freqs = data(:,1);
+S21_Re = data(:,2);
+S21_Im = data(:,3);
+S21 = S21_Re + 1i*S21_Im;
+
+S21_db= 20*log10(abs(S21)); % conversion des données S21 en desibel
+
+%Traçage de S11_db et S21_db 
+
+figure;
+plot(freqs, S11_db, 'LineWidth', 1.5); hold on;
+plot(freqs, S21_db, 'LineWidth', 1.5);
+grid on;
+
+xlabel('Frequency (Hz)');
+ylabel('Magnitude (dB)');
+title('S11 & S21 ');
+
+legend('|S_{11}|','|S_{21}|');
