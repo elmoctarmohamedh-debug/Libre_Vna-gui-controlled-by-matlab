@@ -6,7 +6,7 @@ port = 19542;
 scpi = tcpclient(host, port, "Timeout", 30);
 disp("Connexion SCPI établie");
 
-% Envoi et test de quelques commandes SCIPI
+% Envoi et test de quelques commandes SCPI
 
 % Obtention de 'frequency start'
 pause(0.1);
